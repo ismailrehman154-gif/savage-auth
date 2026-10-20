@@ -1,7 +1,9 @@
-module.exports = function(app, passport, db) {
+const { ObjectID } = require("mongodb");
+
+module.exports = function(app, passport, db, ObjectID) {
 
 // normal routes ===============================================================
-const ObjectId = require('mongodb').ObjectId
+// const ObjectId = require('mongodb').ObjectId
     // show the home page (will also have our login links)
     app.get('/', function(req, res) {
         res.render('index.ejs');
@@ -38,9 +40,9 @@ const ObjectId = require('mongodb').ObjectId
 
     app.put('/messages', (req, res) => {
       db.collection('messages')
-      .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
-        $inc: {
-          change: req.body.change 
+      .findOneAndUpdate({_id: new ObjectID (req.body.messageId)}, {
+        $set: {
+          change: req.body.change + 1
         }
       }, {
         sort: {_id: -1},
@@ -53,9 +55,9 @@ const ObjectId = require('mongodb').ObjectId
 
     app.put('/down', (req, res) => {
       db.collection('messages')
-      .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
-        $inc: {
-          change: req.body.change 
+      .findOneAndUpdate({_id: new ObjectID (req.body.messageId)}, {
+        $set: {
+          change: req.body.change - 1 
         }
       }, {
         sort: {_id: -1},
@@ -67,23 +69,10 @@ const ObjectId = require('mongodb').ObjectId
     })
 
     app.delete('/trash', (req, res) => {
-      let id;
-
-      try {
-        id = new ObjectId(req.body.id)
-      } catch (err){
-        return res.status(400).send('Invalid message ID')
-      }
-
-      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg, change: req.body.change}, (err, result) => {
-        if (err) {
-          return res.status(500).send (err)
-        }
-
-       if (!result.value){res.send('Message deleted!')
-    }
-  
-  })
+      db.collection('messages').findOneAndDelete({_id: new ObjectID (req.body.messageId)}, (err, result) => {
+        if (err) return res.send(500, err)
+        res.send('Message deleted!')
+      })
     })
 
 // =============================================================================
