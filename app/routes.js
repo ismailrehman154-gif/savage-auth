@@ -1,7 +1,7 @@
 module.exports = function(app, passport, db) {
 
 // normal routes ===============================================================
-
+const ObjectId = require('mongodb').ObjectId
     // show the home page (will also have our login links)
     app.get('/', function(req, res) {
         res.render('index.ejs');
@@ -29,7 +29,7 @@ module.exports = function(app, passport, db) {
 // message board routes ===============================================================
 
     app.post('/messages', (req, res) => {
-      db.collection('messages').save({name: req.body.name, msg: req.body.msg, thumbUp: 0, thumbDown:0}, (err, result) => {
+      db.collection('messages').save({name: req.body.name, msg: req.body.msg, change: 0}, (err, result) => {
         if (err) return console.log(err)
         console.log('saved to database')
         res.redirect('/profile')
@@ -40,7 +40,22 @@ module.exports = function(app, passport, db) {
       db.collection('messages')
       .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
         $inc: {
-          thumbUp: req.body.change
+          change: req.body.change 
+        }
+      }, {
+        sort: {_id: -1},
+        upsert: true
+      }, (err, result) => { 
+        if (err) return res.send(err)
+        res.send(result)
+      })
+    })
+
+    app.put('/down', (req, res) => {
+      db.collection('messages')
+      .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
+        $inc: {
+          change: req.body.change 
         }
       }, {
         sort: {_id: -1},
@@ -51,11 +66,24 @@ module.exports = function(app, passport, db) {
       })
     })
 
-    app.delete('/messages', (req, res) => {
-      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, (err, result) => {
-        if (err) return res.send(500, err)
-        res.send('Message deleted!')
-      })
+    app.delete('/trash', (req, res) => {
+      let id;
+
+      try {
+        id = new ObjectId(req.body.id)
+      } catch (err){
+        return res.status(400).send('Invalid message ID')
+      }
+
+      db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg, change: req.body.change}, (err, result) => {
+        if (err) {
+          return res.status(500).send (err)
+        }
+
+       if (!result.value){res.send('Message deleted!')
+    }
+  
+  })
     })
 
 // =============================================================================
