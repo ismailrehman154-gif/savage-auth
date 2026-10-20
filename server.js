@@ -1,7 +1,7 @@
 // server.js
 
 // set up ======================================================================
-// get all the tools we need
+// get all the tools we need  npm install -----
 var express  = require('express');
 var app      = express();
 var port     = process.env.PORT || 8080;
@@ -26,17 +26,17 @@ mongoose.connect(configDB.url, (err, database) => {
   require('./app/routes.js')(app, passport, db);
 }); // connect to our database
 
-require('./config/passport')(passport); // pass passport for configuration
+require('./config/passport')(passport); // pass passport for configuration 
 
 // set up our express application
 app.use(morgan('dev')); // log every request to the console
-app.use(cookieParser()); // read cookies (needed for auth)
-app.use(bodyParser.json()); // get information from html forms
+app.use(cookieParser()); // read cookies (needed for auth) --- used for saved logins
+app.use(bodyParser.json()); // get information from html forms  semi depracated, but imbedded within now
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'))
+app.use(express.static('public')) // make files within a folder accessible            
 
 
-app.set('view engine', 'ejs'); // set up ejs for templating
+app.set('view engine', 'ejs'); // set up ejs for templating, defaults the application to use ejs 
 
 // required for passport
 app.use(session({
